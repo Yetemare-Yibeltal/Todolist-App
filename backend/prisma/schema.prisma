@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  role            UserRole       @default(USER)
+  isActive        Boolean        @default(true)
+  emailVerified   Boolean        @default(false)
+  lastLoginAt     DateTime?
+  refreshToken    String?
+  preferences     Json?          @default("{}")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  tasks           Task[]
+  comments        Comment[]
+  activityLogs    ActivityLog[]
+  userSessions    UserSession[]
+  
+  @@index([email])
+  @@index([isActive])
+}
+
+model Task {
+  id              String         @id @default(uuid())
+  title           String         @db.VarChar(255)
+  description     String?        @db.Text
+  status          TaskStatus     @default(PENDING)
+  priority        TaskPriority   @default(MEDIUM)
+  dueDate         DateTime?
+  completedAt     DateTime?
+  tags            String[]       @default([])
+  attachments     Json?          @default("[]")
+  order           Int            @default(0)
+  isArchived      Boolean        @default(false)
+  parentId        String?        @db.Uuid
+  userId          String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  parent          Task?          @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: SET_NULL)
+  subTasks        Task[]         @relation("TaskHierarchy")
+  comments        Comment[]
+  taskHistory     TaskHistory[]
+  taskAssignments TaskAssignment[]
+  taskLabels      TaskLabel[]
+  taskReminders   TaskReminder[]
+  
+  @@index([userId, status])
+  @@index([userId, priority])
+  @@index([userId, dueDate])
+  @@index([userId, isArchived])
+  @@index([parentId])
+}
+
+model Comment {
+  id              String         @id @default(uuid())
+  content         String         @db.Text
+  userId          String
+  taskId          String
+  parentId        String?        @db.Uuid
+  isEdited        Boolean        @default(false)
+  editedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  parent          Comment?       @relation("CommentHierarchy", fields: [parentId], references: [id], onDelete: SET_NULL)
+  replies         Comment[]      @relation("CommentHierarchy")
+  
+  @@index([taskId, createdAt])
+  @@index([userId])
+}
+
+model TaskHistory {
+  id              String         @id @default(uuid())
+  taskId          String
+  userId          String
+  action          TaskAction
+  oldValue        Json?
+  newValue        Json?
+  changes         Json?
+  createdAt       DateTime       @default(now())
+  
+  // Relations
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  
+  @@index([taskId, createdAt])
+  @@index([userId])
+}
+
+model TaskAssignment {
+  id              String         @id @default(uuid())
+  taskId          String
+  assignedById    String         @db.Uuid
+  assignedToId    String         @db.Uuid
+  role            String         @default("ASSIGNEE")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  assignedBy      User           @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedTo      User           @relation("AssignedTo", fields: [assignedToId], references: [id])
+  
+  @@unique([taskId, assignedToId])
+  @@index([assignedToId])
+}
+
+model TaskLabel {
+  id              String         @id @default(uuid())
+  name            String         @unique
+  color           String         @default("#6366f1")
+  description     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  taskLabels      TaskLabelRelation[]
+}
+
+model TaskLabelRelation {
+  id              String         @id @default(uuid())
+  taskId          String
+  labelId         String
+  createdAt       DateTime       @default(now())
+  
+  // Relations
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  label           TaskLabel      @relation(fields: [labelId], references: [id], onDelete: CASCADE)
+  
+  @@unique([taskId, labelId])
+}
+
+model TaskReminder {
+  id              String         @id @default(uuid())
+  taskId          String
+  reminderAt      DateTime
+  message         String
+  isSent          Boolean        @default(false)
+  sentAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  
+  @@index([reminderAt, isSent])
+}
+
+model UserSession {
+  id              String         @id @default(uuid())
+  userId          String
+  sessionToken    String         @unique
+  deviceInfo      Json?          @default("{}")
+  ipAddress       String?
+  userAgent       String?
+  expiresAt       DateTime
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  
+  @@index([userId, isActive])
+  @@index([sessionToken])
+}
+
+model ActivityLog {
+  id              String         @id @default(uuid())
+  userId          String
+  action          String
+  resource        String
+  resourceId      String?
+  details         Json?          @default("{}")
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime       @default(now())
+  
+  // Relations
+  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  
+  @@index([userId, createdAt])
+  @@index([resource, resourceId])
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+  REVIEW
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskAction {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+  UNASSIGNED
+  COMPLETED
+  ARCHIVED
+  RESTORED
+  COMMENT_ADDED
+}
