@@ -1,6 +1,6 @@
 import { createServer } from "http";
 import { app } from "./app";
-import { env, isDevelopment, isProduction } from "./config/env";
+import { env, isDevelopment } from "./config/env";
 import { connectDB } from "./config/database";
 import { logger } from "./utils/logger";
 import { redisClient, connectRedis } from "./config/redis";
@@ -72,9 +72,6 @@ async function initializeServer() {
     httpServer.listen(PORT, HOST, () => {
       logger.info(`✅ Server started successfully`);
       logger.info(`📍 Server is running on http://${HOST}:${PORT}`);
-      logger.info(
-        `📍 API Documentation: http://${HOST}:${PORT}${env.API_PREFIX}/${env.API_VERSION}/docs`,
-      );
       logger.info(`📍 Health Check: http://${HOST}:${PORT}/health`);
       logger.info(`📍 Environment: ${env.NODE_ENV}`);
     });
@@ -156,7 +153,11 @@ async function gracefulShutdown(exitCode: number = 0) {
     }
 
     logger.info("Closing database connections...");
-    await redisClient().quit();
+    try {
+      await redisClient().quit();
+    } catch (err) {
+      // Ignore Redis quit errors
+    }
     logger.info("✅ Database connections closed");
 
     logger.info("Closing remaining connections...");
