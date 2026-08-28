@@ -1,0 +1,1 @@
+git add frontend/src/components/dashboard/quick-actions.tsx && git commit -m "Complete Quick Actions component with search and favorites"
