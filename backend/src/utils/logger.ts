@@ -2,7 +2,6 @@ import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import { env } from "../config/env";
 import { format } from "util";
-
 const {
   combine,
   timestamp,
@@ -13,11 +12,9 @@ const {
   splat,
   label: labelFn,
 } = winston.format;
-
 const customFormat = printf(
   ({ level, message, timestamp, label, ...metadata }) => {
     let msg = `${timestamp} [${label}] ${level}: ${message}`;
-
     if (Object.keys(metadata).length > 0) {
       const metaString = Object.keys(metadata)
         .filter(
@@ -35,27 +32,22 @@ const customFormat = printf(
         }, "");
       msg += metaString;
     }
-
     return msg;
   },
 );
-
 const jsonFormat = combine(
   errors({ stack: true }),
   splat(),
   timestamp(),
   json(),
 );
-
 const consoleFormat = combine(
   colorize(),
   labelFn({ label: "TodoListAPI" }),
   timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
   customFormat,
 );
-
 const transports: winston.transport[] = [];
-
 if (env.NODE_ENV !== "production") {
   transports.push(
     new winston.transports.Console({
@@ -73,7 +65,6 @@ if (env.NODE_ENV !== "production") {
     }),
   );
 }
-
 const createDailyRotateTransport = (filename: string, level: string) => {
   return new DailyRotateFile({
     filename: `${env.LOG_FILE_PATH}/%DATE%-${filename}`,
@@ -87,7 +78,6 @@ const createDailyRotateTransport = (filename: string, level: string) => {
     handleRejections: true,
   });
 };
-
 if (env.NODE_ENV !== "test") {
   transports.push(
     createDailyRotateTransport("error.log", "error"),
@@ -97,7 +87,6 @@ if (env.NODE_ENV !== "test") {
     createDailyRotateTransport("performance.log", "info"),
   );
 }
-
 const logger = winston.createLogger({
   level: env.LOG_LEVEL || "info",
   format: jsonFormat,
@@ -115,13 +104,11 @@ const logger = winston.createLogger({
   exitOnError: false,
   silent: env.NODE_ENV === "test",
 });
-
 const stream = {
   write: (message: string) => {
     logger.info(message.trim());
   },
 };
-
 const logWithContext = (level: string, message: string, context?: any) => {
   const entry: any = {
     message,
@@ -129,7 +116,6 @@ const logWithContext = (level: string, message: string, context?: any) => {
     environment: env.NODE_ENV,
     service: "todolist-api",
   };
-
   if (context) {
     if (context instanceof Error) {
       entry.error = {
@@ -143,13 +129,10 @@ const logWithContext = (level: string, message: string, context?: any) => {
       entry.context = { value: context };
     }
   }
-
   logger.log(level, entry);
 };
-
 const createLogger = (module: string) => {
   const childLogger = logger.child({ module });
-
   return {
     error: (message: string, context?: any) => {
       childLogger.error(message, context);
@@ -164,15 +147,14 @@ const createLogger = (module: string) => {
       childLogger.debug(message, context);
     },
     trace: (message: string, context?: any) => {
-      childLogger.trace(message, context);
+      childLogger.log("silly", message, context);
     },
     fatal: (message: string, context?: any) => {
-      childLogger.fatal(message, context);
+      childLogger.error(message, context);
     },
     child: (moduleName: string) => createLogger(moduleName),
   };
 };
-
 const performanceLogger = {
   start: (operation: string) => {
     const startTime = process.hrtime();
@@ -190,7 +172,6 @@ const performanceLogger = {
     };
   },
 };
-
 const auditLogger = {
   log: (
     action: string,
@@ -291,7 +272,6 @@ const auditLogger = {
     });
   },
 };
-
 const requestLogger = {
   log: (req: any, res: any, responseTime: number) => {
     const logData = {
@@ -306,7 +286,6 @@ const requestLogger = {
       query: req.query,
       params: req.params,
     };
-
     if (res.statusCode >= 400) {
       logger.warn("Request failed", logData);
     } else {
@@ -314,7 +293,6 @@ const requestLogger = {
     }
   },
 };
-
 export {
   logger,
   stream,
@@ -325,5 +303,4 @@ export {
   requestLogger,
   DailyRotateFile,
 };
-
 export default logger;
