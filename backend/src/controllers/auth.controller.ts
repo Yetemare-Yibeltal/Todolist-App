@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
-import { userService } from "../services/user.service";
 import { logger } from "../utils/logger";
 import { auditLogger } from "../utils/logger";
 import { ApiError } from "../utils/apiError";
 import { env } from "../config/env";
 import { validationService } from "../services/validation.service";
-import { rateLimitService } from "../services/rateLimit.service";
 import { performance } from "perf_hooks";
 import { Types } from "mongoose";
 

@@ -51,8 +51,8 @@ model Task {
   updatedAt       DateTime       @updatedAt
   
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
-  parent          Task?          @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: SET_NULL)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent          Task?          @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   subTasks        Task[]         @relation("TaskHierarchy")
   comments        Comment[]
   taskHistory     TaskHistory[]
@@ -79,9 +79,9 @@ model Comment {
   updatedAt       DateTime       @updatedAt
   
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
-  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
-  parent          Comment?       @relation("CommentHierarchy", fields: [parentId], references: [id], onDelete: SET_NULL)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  parent          Comment?       @relation("CommentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   replies         Comment[]      @relation("CommentHierarchy")
   
   @@index([taskId, createdAt])
@@ -99,8 +99,8 @@ model TaskHistory {
   createdAt       DateTime       @default(now())
   
   // Relations
-  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
-  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([taskId, createdAt])
   @@index([userId])
@@ -116,7 +116,7 @@ model TaskAssignment {
   updatedAt       DateTime       @updatedAt
   
   // Relations
-  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
   assignedBy      User           @relation("AssignedBy", fields: [assignedById], references: [id])
   assignedTo      User           @relation("AssignedTo", fields: [assignedToId], references: [id])
   
@@ -143,8 +143,8 @@ model TaskLabelRelation {
   createdAt       DateTime       @default(now())
   
   // Relations
-  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
-  label           TaskLabel      @relation(fields: [labelId], references: [id], onDelete: CASCADE)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label           TaskLabel      @relation(fields: [labelId], references: [id], onDelete: Cascade)
   
   @@unique([taskId, labelId])
 }
@@ -160,7 +160,7 @@ model TaskReminder {
   updatedAt       DateTime       @updatedAt
   
   // Relations
-  task            Task           @relation(fields: [taskId], references: [id], onDelete: CASCADE)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@index([reminderAt, isSent])
 }
@@ -178,7 +178,7 @@ model UserSession {
   updatedAt       DateTime       @updatedAt
   
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, isActive])
   @@index([sessionToken])
@@ -196,7 +196,7 @@ model ActivityLog {
   createdAt       DateTime       @default(now())
   
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, createdAt])
   @@index([resource, resourceId])
