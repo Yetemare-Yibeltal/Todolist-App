@@ -73,47 +73,14 @@
     "isolatedModules": true,
     "preserveConstEnums": true,
     "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "plugins": [
-      {
-        "transform": "typescript-transform-paths",
-        "exclude": ["**/node_modules/**"]
-      },
-      {
-        "transform": "ts-patch/transformer"
-      }
-    ]
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
-    "src/types/**/*.d.ts",
-    "src/config/**/*.ts",
-    "src/controllers/**/*.ts",
-    "src/middleware/**/*.ts",
-    "src/models/**/*.ts",
-    "src/routes/**/*.ts",
-    "src/services/**/*.ts",
-    "src/schemas/**/*.ts",
-    "src/utils/**/*.ts",
-    "src/validators/**/*.ts",
-    "src/decorators/**/*.ts",
-    "src/interfaces/**/*.ts",
-    "src/constants/**/*.ts",
-    "src/enums/**/*.ts",
-    "src/errors/**/*.ts",
-    "src/events/**/*.ts",
-    "src/queues/**/*.ts",
-    "src/jobs/**/*.ts",
-    "src/repositories/**/*.ts",
-    "src/factories/**/*.ts",
-    "src/adapters/**/*.ts",
-    "src/helpers/**/*.ts",
-    "src/hooks/**/*.ts",
-    "src/plugins/**/*.ts",
-    "src/seeders/**/*.ts"
+    "src/types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
