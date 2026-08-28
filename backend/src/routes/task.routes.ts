@@ -417,106 +417,19 @@ router.put(
  *         description: Task not found
  */
 router.delete("/:id", authMiddleware.requireAuth(), taskController.deleteTask);
-
-/**
- * @swagger
- * /api/v1/tasks/{id}/restore:
- *   put:
- *     summary: Restore task from trash
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Task restored successfully
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.put(
   "/:id/restore",
   authMiddleware.requireAuth(),
   taskController.restoreTask,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/archive:
- *   put:
- *     summary: Archive task
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Task archived successfully
- *       400:
- *         description: Task is not completed
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
+
 router.put(
   "/:id/archive",
   authMiddleware.requireAuth(),
   taskController.archiveTask,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/assign:
- *   put:
- *     summary: Assign task to user
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - assigneeId
- *             properties:
- *               assigneeId:
- *                 type: string
- *     responses:
- *       200:
- *         description: Task assigned successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task or user not found
- */
 router.put(
   "/:id/assign",
   authMiddleware.requireAuth(),
@@ -524,43 +437,6 @@ router.put(
   taskController.assignTask,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/subtasks:
- *   post:
- *     summary: Add subtask to task
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - subtaskId
- *             properties:
- *               subtaskId:
- *                 type: string
- *     responses:
- *       200:
- *         description: Subtask added successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.post(
   "/:id/subtasks",
   authMiddleware.requireAuth(),
@@ -568,148 +444,17 @@ router.post(
   taskController.addSubtask,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/subtasks:
- *   delete:
- *     summary: Remove subtask from task
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - subtaskId
- *             properties:
- *               subtaskId:
- *                 type: string
- *     responses:
- *       200:
- *         description: Subtask removed successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
-router.delete(
-  "/:id/subtasks",
-  authMiddleware.requireAuth(),
-  validate(subtaskSchema),
-  taskController.removeSubtask,
-);
-
-/**
- * @swagger
- * /api/v1/tasks/{id}/watchers:
- *   post:
- *     summary: Add watcher to task
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Watcher added successfully
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.post(
   "/:id/watchers",
   authMiddleware.requireAuth(),
   taskController.addWatcher,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/watchers:
- *   delete:
- *     summary: Remove watcher from task
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Watcher removed successfully
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.delete(
   "/:id/watchers",
   authMiddleware.requireAuth(),
   taskController.removeWatcher,
 );
-
-/**
- * @swagger
- * /api/v1/tasks/{id}/checklist:
- *   put:
- *     summary: Toggle checklist item
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - index
- *             properties:
- *               index:
- *                 type: integer
- *                 minimum: 0
- *     responses:
- *       200:
- *         description: Checklist item toggled successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.put(
   "/:id/checklist",
   authMiddleware.requireAuth(),
@@ -717,90 +462,19 @@ router.put(
   taskController.toggleChecklistItem,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/time/start:
- *   post:
- *     summary: Start time tracking
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Time tracking started
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.post(
   "/:id/time/start",
   authMiddleware.requireAuth(),
   taskController.startTimeTracking,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/time/pause:
- *   post:
- *     summary: Pause time tracking
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Time tracking paused
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
 router.post(
   "/:id/time/pause",
   authMiddleware.requireAuth(),
   taskController.pauseTimeTracking,
 );
 
-/**
- * @swagger
- * /api/v1/tasks/{id}/time/stop:
- *   post:
- *     summary: Stop time tracking
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Time tracking stopped
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Task not found
- */
+
 router.post(
   "/:id/time/stop",
   authMiddleware.requireAuth(),
