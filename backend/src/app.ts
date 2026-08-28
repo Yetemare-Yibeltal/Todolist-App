@@ -1,3 +1,4 @@
+
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -7,9 +8,9 @@ import cookieParser from "cookie-parser";
 import { env, isDevelopment } from "./config/env";
 import { logger } from "./utils/logger";
 import { errorMiddleware } from "./middleware/error.middleware";
-import { authRoutes } from "./routes/auth.routes";
-import { taskRoutes } from "./routes/task.routes";
-import { healthRoutes } from "./routes/health.routes";
+import authRoutes from "./routes/auth.routes";
+import taskRoutes from "./routes/task.routes";
+import healthRoutes from "./routes/health.routes";
 
 export const app: Express = express();
 
