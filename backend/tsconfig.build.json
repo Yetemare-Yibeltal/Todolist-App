@@ -25,6 +25,6 @@
     "**/*.e2e.ts",
     "**/*.integration.ts",
     "scripts/**/*",
-    "test/**/*"
+    "tests/**/*"
   ]
 }
