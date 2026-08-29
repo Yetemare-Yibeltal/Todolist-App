@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { AnyZodObject, ZodError, ZodSchema } from "zod";
+import { ZodError, ZodSchema } from "zod";
 import {
   ValidationError as ClassValidationError,
-  validate,
+  validate as classValidate,
   ValidatorOptions,
 } from "class-validator";
 import { plainToClass } from "class-transformer";
@@ -48,10 +48,11 @@ class ValidationMiddleware {
 
     for (const issue of error.issues) {
       const path = issue.path.join(".");
+
       errors.push({
         field: path,
         message: issue.message,
-        value: issue.input?.[path],
+        value: undefined,
         type: issue.code,
       });
     }
@@ -74,6 +75,7 @@ class ValidationMiddleware {
         });
       } else {
         const constraints = error.constraints || {};
+
         for (const [type, message] of Object.entries(constraints)) {
           formattedErrors.push({
             field: error.property,
@@ -106,31 +108,37 @@ class ValidationMiddleware {
   private sanitizeData(data: any, options: ValidationOptions): any {
     if (options.skipNull) {
       const sanitized = { ...data };
+
       for (const key of Object.keys(sanitized)) {
         if (sanitized[key] === null) {
           delete sanitized[key];
         }
       }
+
       return sanitized;
     }
 
     if (options.skipUndefined) {
       const sanitized = { ...data };
+
       for (const key of Object.keys(sanitized)) {
         if (sanitized[key] === undefined) {
           delete sanitized[key];
         }
       }
+
       return sanitized;
     }
 
     if (options.skipMissing) {
       const sanitized = { ...data };
+
       for (const key of Object.keys(sanitized)) {
         if (sanitized[key] === null || sanitized[key] === undefined) {
           delete sanitized[key];
         }
       }
+
       return sanitized;
     }
 
@@ -155,7 +163,7 @@ class ValidationMiddleware {
       forbidUnknownValues: options.forbidUnknownValues || false,
     };
 
-    const errors = await validate(instance, validatorOptions);
+    const errors = await classValidate(instance, validatorOptions);
 
     if (errors.length > 0) {
       return {
@@ -169,10 +177,15 @@ class ValidationMiddleware {
 
   private validateWithZod(
     data: any,
-    schema: AnyZodObject,
-  ): { valid: boolean; errors: ValidationError[]; validatedData: any } {
+    schema: ZodSchema,
+  ): {
+    valid: boolean;
+    errors: ValidationError[];
+    validatedData: any;
+  } {
     try {
       const validatedData = schema.parse(data);
+
       return {
         valid: true,
         errors: [],
@@ -186,13 +199,14 @@ class ValidationMiddleware {
           validatedData: null,
         };
       }
+
       throw error;
     }
   }
 
   private async validateData(
     data: any,
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions,
   ): Promise<{
     valid: boolean;
@@ -201,10 +215,7 @@ class ValidationMiddleware {
   }> {
     const sanitizedData = this.sanitizeData(data, options);
 
-    if (
-      schema instanceof AnyZodObject ||
-      (schema && typeof schema.parse === "function")
-    ) {
+    if (schema && typeof schema.parse === "function") {
       return this.validateWithZod(sanitizedData, schema);
     } else if (
       typeof schema === "function" &&
@@ -216,6 +227,7 @@ class ValidationMiddleware {
         schema,
         options,
       );
+
       return {
         ...result,
         validatedData: result.valid ? sanitizedData : null,
@@ -227,7 +239,7 @@ class ValidationMiddleware {
     }
   }
 
-  public validate(schema: AnyZodObject | any, options: ValidationOptions = {}) {
+  public validate(schema: ZodSchema | any, options: ValidationOptions = {}) {
     return async (req: Request, res: Response, next: NextFunction) => {
       const startTime = performance.now();
 
@@ -252,7 +264,7 @@ class ValidationMiddleware {
             duration: `${duration.toFixed(2)}s`,
             path: req.path,
             method: req.method,
-            errors: errors,
+            errors,
             source,
           });
 
@@ -264,6 +276,7 @@ class ValidationMiddleware {
         }
 
         const duration = (performance.now() - startTime) / 1000;
+
         if (duration > 1) {
           logger.debug("Validation completed:", {
             duration: `${duration.toFixed(2)}s`,
@@ -283,6 +296,7 @@ class ValidationMiddleware {
             path: req.path,
             method: req.method,
           });
+
           next(new ApiError(400, "Validation error occurred"));
         }
       }
@@ -291,7 +305,7 @@ class ValidationMiddleware {
 
   public validateParam(
     paramName: string,
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -312,12 +326,14 @@ class ValidationMiddleware {
 
         if (!valid) {
           const duration = (performance.now() - startTime) / 1000;
+
           logger.warn("Parameter validation failed:", {
             duration: `${duration.toFixed(2)}s`,
             paramName,
             paramValue,
             errors,
           });
+
           throw new ApiError(400, `Invalid parameter '${paramName}'`, errors);
         }
 
@@ -335,6 +351,7 @@ class ValidationMiddleware {
             paramName,
             path: req.path,
           });
+
           next(new ApiError(400, `Invalid parameter '${paramName}'`));
         }
       }
@@ -342,21 +359,21 @@ class ValidationMiddleware {
   }
 
   public validateQuery(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return this.validate(schema, { ...options, source: "query" });
   }
 
   public validateParams(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return this.validate(schema, { ...options, source: "params" });
   }
 
   public validateHeaders(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return this.validate(schema, { ...options, source: "headers" });
@@ -364,7 +381,7 @@ class ValidationMiddleware {
 
   public async validateCustom(
     data: any,
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ): Promise<{
     valid: boolean;
@@ -375,14 +392,14 @@ class ValidationMiddleware {
   }
 
   public createValidator(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return this.validate(schema, options);
   }
 
   public validateArray(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     options: ValidationOptions = {},
   ) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -415,18 +432,25 @@ class ValidationMiddleware {
 
         if (errors.length > 0) {
           const duration = (performance.now() - startTime) / 1000;
+
           logger.warn("Array validation failed:", {
             duration: `${duration.toFixed(2)}s`,
             path: req.path,
             method: req.method,
             errors,
           });
-          throw new ApiError(400, "Validation failed for array items", errors);
+
+          throw new ApiError(
+            400,
+            "Validation failed for array items",
+            errors,
+          );
         }
 
         req.body = validatedData;
 
         const duration = (performance.now() - startTime) / 1000;
+
         if (duration > 1) {
           logger.debug("Array validation completed:", {
             duration: `${duration.toFixed(2)}s`,
@@ -446,6 +470,7 @@ class ValidationMiddleware {
             stack: error.stack,
             path: req.path,
           });
+
           next(new ApiError(400, "Array validation failed"));
         }
       }
@@ -453,7 +478,7 @@ class ValidationMiddleware {
   }
 
   public validateNested(
-    schemaMap: Record<string, AnyZodObject | any>,
+    schemaMap: Record<string, ZodSchema | any>,
     options: ValidationOptions = {},
   ) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -486,12 +511,14 @@ class ValidationMiddleware {
 
         if (errors.length > 0) {
           const duration = (performance.now() - startTime) / 1000;
+
           logger.warn("Nested validation failed:", {
             duration: `${duration.toFixed(2)}s`,
             path: req.path,
             method: req.method,
             errors,
           });
+
           throw new ApiError(
             400,
             "Validation failed for nested fields",
@@ -502,6 +529,7 @@ class ValidationMiddleware {
         req.body = { ...data, ...validatedData };
 
         const duration = (performance.now() - startTime) / 1000;
+
         if (duration > 1) {
           logger.debug("Nested validation completed:", {
             duration: `${duration.toFixed(2)}s`,
@@ -521,6 +549,7 @@ class ValidationMiddleware {
             stack: error.stack,
             path: req.path,
           });
+
           next(new ApiError(400, "Nested validation failed"));
         }
       }
@@ -559,16 +588,19 @@ class ValidationMiddleware {
 
         if (errors.length > 0) {
           const duration = (performance.now() - startTime) / 1000;
+
           logger.warn("Custom validation failed:", {
             duration: `${duration.toFixed(2)}s`,
             path: req.path,
             method: req.method,
             errors,
           });
+
           throw new ApiError(400, "Custom validation failed", errors);
         }
 
         const duration = (performance.now() - startTime) / 1000;
+
         if (duration > 1) {
           logger.debug("Custom validation completed:", {
             duration: `${duration.toFixed(2)}s`,
@@ -587,6 +619,7 @@ class ValidationMiddleware {
             stack: error.stack,
             path: req.path,
           });
+
           next(new ApiError(400, "Custom validation failed"));
         }
       }
@@ -594,7 +627,7 @@ class ValidationMiddleware {
   }
 
   public validateWithTransform<T>(
-    schema: AnyZodObject | any,
+    schema: ZodSchema | any,
     transform: (data: any) => T,
     options: ValidationOptions = {},
   ) {
@@ -617,12 +650,14 @@ class ValidationMiddleware {
 
         if (!valid) {
           const duration = (performance.now() - startTime) / 1000;
+
           logger.warn("Validation with transform failed:", {
             duration: `${duration.toFixed(2)}s`,
             path: req.path,
             method: req.method,
             errors,
           });
+
           throw new ApiError(400, "Validation failed", errors);
         }
 
@@ -632,6 +667,7 @@ class ValidationMiddleware {
         }
 
         const duration = (performance.now() - startTime) / 1000;
+
         if (duration > 1) {
           logger.debug("Validation with transform completed:", {
             duration: `${duration.toFixed(2)}s`,
@@ -650,6 +686,7 @@ class ValidationMiddleware {
             stack: error.stack,
             path: req.path,
           });
+
           next(new ApiError(400, "Validation with transform failed"));
         }
       }
@@ -658,22 +695,32 @@ class ValidationMiddleware {
 }
 
 export const validationMiddleware = ValidationMiddleware.getInstance();
+
 export const validate =
   validationMiddleware.validate.bind(validationMiddleware);
+
 export const validateParam =
   validationMiddleware.validateParam.bind(validationMiddleware);
+
 export const validateQuery =
   validationMiddleware.validateQuery.bind(validationMiddleware);
+
 export const validateParams =
   validationMiddleware.validateParams.bind(validationMiddleware);
+
 export const validateHeaders =
   validationMiddleware.validateHeaders.bind(validationMiddleware);
+
 export const validateArray =
   validationMiddleware.validateArray.bind(validationMiddleware);
+
 export const validateNested =
   validationMiddleware.validateNested.bind(validationMiddleware);
+
 export const validateCustomRules =
   validationMiddleware.validateCustomRules.bind(validationMiddleware);
+
 export const validateWithTransform =
   validationMiddleware.validateWithTransform.bind(validationMiddleware);
+
 export default validationMiddleware;
