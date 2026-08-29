@@ -268,7 +268,7 @@ class ValidationMiddleware {
             source,
           });
 
-          throw new ApiError(400, "Validation failed", errors);
+          throw new ApiError(400, "Validation failed", true, errors);
         }
 
         if (validatedData) {
@@ -334,7 +334,7 @@ class ValidationMiddleware {
             errors,
           });
 
-          throw new ApiError(400, `Invalid parameter '${paramName}'`, errors);
+          throw new ApiError(400, `Invalid parameter '${paramName}'`, true, errors);
         }
 
         if (validatedData) {
@@ -443,6 +443,7 @@ class ValidationMiddleware {
           throw new ApiError(
             400,
             "Validation failed for array items",
+            true,
             errors,
           );
         }
@@ -522,6 +523,7 @@ class ValidationMiddleware {
           throw new ApiError(
             400,
             "Validation failed for nested fields",
+            true,
             errors,
           );
         }
@@ -596,7 +598,7 @@ class ValidationMiddleware {
             errors,
           });
 
-          throw new ApiError(400, "Custom validation failed", errors);
+          throw new ApiError(400, "Custom validation failed", true, errors);
         }
 
         const duration = (performance.now() - startTime) / 1000;
@@ -658,7 +660,7 @@ class ValidationMiddleware {
             errors,
           });
 
-          throw new ApiError(400, "Validation failed", errors);
+          throw new ApiError(400, "Validation failed", true, errors);
         }
 
         if (validatedData) {
